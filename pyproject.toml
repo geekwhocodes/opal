@@ -4,11 +4,17 @@ version = "0.1.0"
 description = ""
 authors = ["Ganesh Raskar <ganeshraskar@outlook.com>"]
 readme = "README.md"
-packages = [{include = "opalizer", from = "src"}]
+packages = [{include = "opalizer", from = "opalizer"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+fastapi = "^0.96.0"
+uvicorn = {extras = ["standard"], version = "^0.22.0"}
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+httpx = "^0.24.1"
 
 [build-system]
 requires = ["poetry-core"]
