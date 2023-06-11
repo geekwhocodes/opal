@@ -10,6 +10,11 @@ packages = [{include = "opalizer", from = "opalizer"}]
 python = "^3.10"
 fastapi = "^0.96.0"
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
+pydantic = "^1.10.9"
+opentelemetry-instrumentation-fastapi = "^0.39b0"
+rich = "^13.4.1"
+slowapi = "^0.1.8"
+schedule = "^1.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
