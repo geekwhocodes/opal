@@ -130,3 +130,6 @@ dmypy.json
 /requirements-dev.txt
 .venv
 *.log
+*.ipynb
+.env*
+*.db
