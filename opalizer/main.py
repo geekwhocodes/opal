@@ -7,7 +7,10 @@ from slowapi.errors import RateLimitExceeded
 from opalizer.config import Settings, get_settings
 from opalizer.core.logging import setup_logging
 from opalizer.core.rate_limiter import limiter
-from opalizer.api.orgs.router import orgs_router
+from opalizer.api.tenants.router import orgs_router
+
+# patch
+from opalizer.database import create_schema
 
 log = logging.getLogger(__name__)
 setup_logging()
@@ -20,13 +23,14 @@ def create_app() -> FastAPI:
     return app
 
 app = create_app()
-app.include_router(router=orgs_router, prefix="/v1/orgs")
+app.include_router(router=orgs_router)
 
 
 
 
 @app.on_event("startup")
 async def startup_event():
+    await create_schema()
     logging.info("Starting up...")
 
 @app.on_event("shutdown")

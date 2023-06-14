@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Union
 from zoneinfo import ZoneInfo
 
 import orjson
@@ -24,6 +25,19 @@ class ORJSONModel(BaseModel):
         json_loads = orjson.loads
         json_dumps = orjson_dumps
         json_encoders = {datetime: convert_datetime_to_gmt}  # method for customer JSON encoding of datetime fields
+        orm_mode = True
+
+    # @root_validator(pre=True)
+    # def build_additional_properties(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    #     """ Maps extra fields into additionalProperties fields"""
+    #     all_required_field_names = {field.alias for field in cls.__fields__.values() if field.alias != 'extra'}  # to support alias
+
+    #     extra: Dict[str, Any] = {}
+    #     for field_name in list(values):
+    #         if field_name not in all_required_field_names:
+    #             extra[field_name] = values.pop(field_name)
+    #     values['additional_properties'] = extra
+    #     return values
 
     @root_validator()
     def set_null_microseconds(cls, data: dict) -> dict:
@@ -42,13 +56,16 @@ class ORJSONModel(BaseModel):
        return jsonable_encoder(default_dict)
 
 
-class BaseSchema(ORJSONModel):
-    id: int
-
-class ResponseStatus(Enum):
+class RequestStatus(Enum):
     success = "success"
-    error   = "error"
+    error = "error"
 
-class CreatedResponseSchema(ORJSONModel):
-    status: ResponseStatus
-    data: BaseSchema
+class SingleResponse(ORJSONModel):
+    status: RequestStatus
+    value: Any | None
+    error: Union[Any, None]
+
+class CollectionResponse(ORJSONModel):
+    status: RequestStatus
+    value: List[Any | None]
+    error: Union[Any, None]

@@ -1,11 +1,12 @@
-from sqlalchemy.sql import func
-from sqlalchemy import TIMESTAMP, Column
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import MetaData
 
-class BaseModel:
-    createdAt = Column(
-        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
-    )
-    updatedAt = Column(TIMESTAMP(timezone=True), default=None, onupdate=func.now())
-
-
-
+POSTGRES_INDEXES_NAMING_CONVENTION = {
+    "ix": "%(column_0_label)s_idx",
+    "uq": "%(table_name)s_%(column_0_name)s_key",
+    "ck": "%(table_name)s_%(constraint_name)s_check",
+    "fk": "%(table_name)s_%(column_0_name)s_fkey",
+    "pk": "%(table_name)s_pkey",
+}
+metadata = MetaData(naming_convention=POSTGRES_INDEXES_NAMING_CONVENTION, schema="tenant")
+SharedBase = declarative_base(metadata=metadata)

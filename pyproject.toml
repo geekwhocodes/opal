@@ -10,13 +10,16 @@ packages = [{include = "opalizer", from = "opalizer"}]
 python = "^3.10"
 fastapi = "^0.96.0"
 uvicorn = {extras = ["standard"], version = "^0.22.0"}
-pydantic = "^1.10.9"
 opentelemetry-instrumentation-fastapi = "^0.39b0"
 rich = "^13.4.1"
 slowapi = "^0.1.8"
 schedule = "^1.2.0"
-sqlalchemy = "^2.0.16"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.16"}
 orjson = "^3.9.1"
+psycopg2-binary = "^2.9.6"
+pydantic = "^1.10.9"
+sqlalchemy-utils = "^0.41.1"
+asyncpg = "^0.27.0"
 
 
 [tool.poetry.group.dev.dependencies]
