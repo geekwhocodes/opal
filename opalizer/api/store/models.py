@@ -1,0 +1,24 @@
+import sqlalchemy as sa
+from sqlalchemy.orm import relationship
+from uuid import uuid4
+from opalizer.database import Base
+from opalizer.poc.shared_models import Tenant
+
+class Stores(Base):
+    __tablename__ = "stores"
+
+    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4(), nullable=False)
+    name = sa.Column("name", sa.String(256), nullable=False, index=True, unique=True)
+    owner = sa.Column("owner", sa.String(64), nullable=False, unique=True)
+    latitude = sa.Column("latitude", sa.Float(), nullable=False)
+    longitude = sa.Column("longitude", sa.Float(), nullable=False)
+    radius = sa.Column("radius", sa.Float(), nullable=False)
+    tenant_id = sa.Column("tenant_id", sa.UUID(),sa.ForeignKey("public.tenants.id"), nullable=False)
+    
+    
+    tenant = relationship("Tenant", foreign_keys="Store.tenant_id")
+
+    created_at = sa.Column(
+        sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
+    )
+    updated_at = sa.Column(sa.TIMESTAMP(timezone=True), default=None, onupdate=sa.func.now())

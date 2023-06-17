@@ -1,37 +1,74 @@
+from typing import List
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi import status as HttpStatus
 from fastapi.responses import ORJSONResponse
 from sqlalchemy.orm import Session
-from opalizer.api.tenants.utils import slugify, generate_api_key
-
+from pydantic import UUID4, parse_obj_as
+from opalizer.exceptions import TenantNameNotAvailableError, UpgradeAlembicHeadError
+from opalizer.api.tenants.utils import slugify, generate_api_key, generate_tenant_schema_name
 from opalizer.core.rate_limiter import limiter
 from opalizer.schemas import SingleResponse, CollectionResponse, RequestStatus
 from opalizer.api.tenants.schemas import TenantSchema
 from opalizer.api.tenants.models import Tenant
-from opalizer.database import get_public_db
+from opalizer.api.tenants import service as ts
+from opalizer.database import get_public_async_db
+
 
 orgs_router = APIRouter(
     prefix="/v1/tenants"
 )
 
-@orgs_router.get("/{id}", status_code=HttpStatus.HTTP_200_OK)
-async def get_org(id:int):
-    return
+# @orgs_router.get("/{id}", status_code=HttpStatus.HTTP_200_OK)
+# async def get_tenant(request:Request, response:Response,
+#                   id:UUID4,
+#                   db:Session=Depends(get_public_async_db)):
+#     try:
+#         tenant = await ts.get_by_id(session=db, id=id)
+#         return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(tenant))
+#     except Exception as e:
+#         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
 
-@orgs_router.post("/", status_code=HttpStatus.HTTP_201_CREATED)
+@orgs_router.get("/{name}", status_code=HttpStatus.HTTP_200_OK)
+async def get_tenant(request:Request, response:Response,
+                  name:str,
+                  db:Session=Depends(get_public_async_db)):
+    try:
+        tenant = await ts.get_by_name(session=db, tenant_name=name)
+        return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(tenant))
+    except Exception as e:
+        return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
+
+
+@orgs_router.get("/", status_code=HttpStatus.HTTP_200_OK)
+async def get_all_tenants(request:Request, response:Response,
+                          db:Session=Depends(get_public_async_db)):
+    try:
+        tenants = await ts.get_all(db)
+        return CollectionResponse(status=RequestStatus.success, value=parse_obj_as(List[TenantSchema], tenants))
+    except Exception as e:
+        return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
+
+@orgs_router.post("/", status_code=HttpStatus.HTTP_200_OK)
 @limiter.limit("10/second")
 async def create_tenant(request:Request, response:Response, 
                      payload: TenantSchema, 
-                     db:Session=Depends(get_public_db)) -> SingleResponse:
+                     db:Session=Depends(get_public_async_db)) -> SingleResponse:
     try:
-        new_tenant = Tenant(**payload.dict())
-        new_tenant.schema = payload.name
-        new_tenant.slug = slugify(payload.name)
-        new_tenant.api_key = generate_api_key(suffix=payload.name)
-        db.add(new_tenant)
-        await db.commit()
-        await db.refresh(new_tenant)
+        tenant = await ts.get_by_name(session=db, tenant_name=payload.name)
+        if tenant:
+            response.status_code = HttpStatus.HTTP_409_CONFLICT
+            return SingleResponse(status=RequestStatus.error, 
+                                  value=None,
+                                  error=f"Tenant name '{payload.name}' is not available. Please use different tenant name.")
+        
+        new_tenant = await ts.create_tenant(payload)
+        
         return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(new_tenant))
-    except Exception as e:
+    
+    except TenantNameNotAvailableError as e:
+        response.status_code = HttpStatus.HTTP_409_CONFLICT
         return SingleResponse(status=RequestStatus.error, value=None, error=str(e))
+    
+    except Exception as e:
+        return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
     

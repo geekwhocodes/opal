@@ -1,27 +1,26 @@
 import pytest
 from async_asgi_testclient import TestClient
-from httpx import Response
+from httpx import Response, _status_codes
 
 from opalizer.api.tenants.schemas import TenantSchema
 
-ORG_ID = 1
-
 @pytest.mark.asyncio
-async def test_get_org(aio_client: TestClient):
-    test_resp = {'data': {'id': ORG_ID}, 'status': 'success'}
-    response:Response = await aio_client.get("/v1/orgs/1")
-    assert response.status_code == 200
+async def test_get_all_tenants(client: TestClient):
+    response:Response = await client.get("/v1/tenants/")
+    assert response.status_code == _status_codes.code.OK
     resp = response.json()
-    assert resp == test_resp
+    assert resp.get("status") == "success"
+    assert isinstance(resp.get("value"), list)
 
 
 @pytest.mark.asyncio
-async def test_create_org(aio_client: TestClient):
+async def test_create_tenant(client: TestClient):
     org_name ="Geekwhocodes"
-    slug = org_name.lower()
     payload = TenantSchema(name=org_name)
-    test_resp = {'error': None, 'status': 'ok', 'value': {'id': '1', 'name': 'Geekwhocodes'}}
-    response:Response = await aio_client.post("/v1/tenants/", data=payload.json())
-    assert response.status_code == 201
+    response:Response = await client.post("/v1/tenants/", data=payload.json())
+    assert response.status_code == _status_codes.code.OK
     resp = response.json()
-    assert resp == test_resp
+    assert resp.get("status") == "success"
+    result = TenantSchema(**resp.get("value"))
+    assert isinstance(result, TenantSchema)
+    assert result.name == org_name

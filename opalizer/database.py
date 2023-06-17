@@ -2,17 +2,22 @@ from contextlib import asynccontextmanager
 from typing import Union
 import logging
 from fastapi import Depends
-from sqlalchemy import MetaData, select
+import sqlalchemy as sa
+from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.exc import ProgrammingError
 
 from opalizer.api.tenants.models import Tenant
 from opalizer.api.tenants.schemas import TenantSchema
-from opalizer.models import SharedBase
-from opalizer.config import settings
+from opalizer.config import Env, settings
 
-engine = create_async_engine(settings.db_url, echo=bool(settings.sql_echo), pool_pre_ping=True, pool_recycle=240)
-async_session = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+if settings.environment == Env.tst:
+    async_engine = create_async_engine(settings.test_db_url, echo=bool(settings.sql_echo), pool_pre_ping=True, pool_recycle=240)
+else:
+    async_engine = create_async_engine(settings.db_url, echo=bool(settings.sql_echo), pool_pre_ping=True, pool_recycle=240)
+
+async_session = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 POSTGRES_INDEXES_NAMING_CONVENTION = {
@@ -22,27 +27,26 @@ POSTGRES_INDEXES_NAMING_CONVENTION = {
     "fk": "%(table_name)s_%(column_0_name)s_fkey",
     "pk": "%(table_name)s_pkey",
 }
-metadata = MetaData(naming_convention=POSTGRES_INDEXES_NAMING_CONVENTION, schema="tenant")
-Base = declarative_base(metadata=metadata)
 
-async def create_schema():
-    async with engine.begin() as conn:
-        await conn.run_sync(SharedBase.metadata.drop_all)
-        await conn.run_sync(SharedBase.metadata.create_all)
+metadata = sa.MetaData(naming_convention=POSTGRES_INDEXES_NAMING_CONVENTION, schema="tenant")
+Base = declarative_base(metadata=metadata)
 
 
 @asynccontextmanager
-async def with_db(tenant_schema_name: Union[str, None]):
+async def with_async_db(tenant_schema_name: Union[str, None]) -> AsyncSession:
     schema_translate_map = None
     if tenant_schema_name:
         schema_translate_map = dict(tenant=tenant_schema_name)
     
-    schema_engine = engine.execution_options(schema_translate_map=schema_translate_map)
+    schema_engine = async_engine.execution_options(schema_translate_map=schema_translate_map)
     try:
         async with async_session(autocommit=False, autoflush=False, bind=schema_engine) as session:
             yield session
+    except ProgrammingError as e:
+        await session.rollback()
+        raise e
     except Exception as e:
-        logging.fatal(e, tenant=tenant_schema_name)
+        logging.fatal(e, {"tenant": tenant_schema_name})
         await session.rollback()
     finally:
         await session.close()
@@ -57,7 +61,7 @@ async def get_tanant() -> TenantSchema:
 
         tenant_name = tenant_name.strip()
 
-        async with with_db(None) as db:
+        async with with_async_db(None) as db:
             query = select(Tenant).where(Tenant.name == tenant_name)
             result = await db.execute(query)
 
@@ -69,16 +73,13 @@ async def get_tanant() -> TenantSchema:
         logging.fatal(e, tenant=tenant_name)
     return tenant
 
-async def get_db(tenant:Tenant=Depends(get_tanant)):
+async def get_async_db(tenant:Tenant=Depends(get_tanant)):
     if not tenant:
         yield None
     
-    async with with_db(tenant.schema) as db:
+    async with with_async_db(tenant.schema) as db:
         yield db
 
-async def get_public_db() -> Session:
-    async with with_db("public") as db:
+async def get_public_async_db() -> Session:
+    async with with_async_db("public") as db:
         yield db
-
-        
-    

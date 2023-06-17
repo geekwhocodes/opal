@@ -3,11 +3,9 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
-from opalizer.config import settings
 from pydantic import BaseModel
 
-
-LOGGER_FILE = Path(settings.log_file)  # where log is stored
+LOGGER_FILE = Path("logd.log")  # where log is stored
 DATE_FORMAT = "%d %b %Y | %H:%M:%S"
 LOGGER_FORMAT = "%(asctime)s | %(message)s"
 
@@ -23,7 +21,7 @@ def get_logger_config():
     """Installs RichHandler (Rich library) if not in production
     environment, or use the production log configuration.
     """
-    if not settings.env == "prd":
+    if not "settings.env" == "prd":
         from rich.logging import RichHandler
 
         output_file_handler = logging.FileHandler(LOGGER_FILE)

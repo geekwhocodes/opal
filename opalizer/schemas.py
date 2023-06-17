@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 from zoneinfo import ZoneInfo
 
 import orjson

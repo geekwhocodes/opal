@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": { "PYTHONPATH": "${workspaceRoot}"}
+        },
+        {
             "name": "Python: FastAPI",
             "type": "python",
             "request": "launch",
@@ -14,7 +23,10 @@
                 "--reload"
             ],
             "jinja": true,
-            "justMyCode": true
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}"
+            }
         }
     ]
 }

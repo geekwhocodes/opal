@@ -1,5 +1,5 @@
+import sqlalchemy as sa
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import MetaData
 
 POSTGRES_INDEXES_NAMING_CONVENTION = {
     "ix": "%(column_0_label)s_idx",
@@ -9,5 +9,5 @@ POSTGRES_INDEXES_NAMING_CONVENTION = {
     "pk": "%(table_name)s_pkey",
 }
 
-metadata = MetaData(naming_convention=POSTGRES_INDEXES_NAMING_CONVENTION, schema="tenant")
+metadata = sa.MetaData(naming_convention=POSTGRES_INDEXES_NAMING_CONVENTION, schema="shared")
 Base = declarative_base(metadata=metadata)
