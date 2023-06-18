@@ -110,11 +110,9 @@ async def get_all(session:AsyncSession) -> Union[None, List[Tenant]]:
     return result.scalars().all()
 
 async def get_by_name(session:AsyncSession, tenant_name:str) -> Union[None, Tenant]:
-    async with with_async_db("public") as session:
-        result = await session.execute(select(Tenant).where(Tenant.name == tenant_name).order_by(Tenant.name).limit(1))
-        return result.scalar_one_or_none()
+    result = await session.execute(select(Tenant).where(Tenant.name == tenant_name).order_by(Tenant.name).limit(1))
+    return result.scalar_one_or_none()
 
 async def get_by_id(session:AsyncSession, id:UUID) -> Union[None, Tenant]:
-    async with with_async_db("public") as session:
-        result = await session.execute(select(Tenant).where(Tenant.id == id).limit(1))
-        return result.scalar_one_or_none()
+    result = await session.execute(select(Tenant).where(Tenant.id == id).limit(1))
+    return result.scalar_one_or_none()

@@ -1,6 +1,8 @@
+from typing import List
 from uuid import uuid4
 import sqlalchemy as sa
 from sqlalchemy.sql import func
+
 
 from opalizer.shared_models import Base
 

@@ -1,15 +1,17 @@
 from contextlib import asynccontextmanager
 from typing import Union
 import logging
-from fastapi import Depends
+import uuid
+from fastapi import Depends, Header
 import sqlalchemy as sa
-from sqlalchemy import select
+from sqlalchemy import func, select, or_
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.exc import ProgrammingError
 
 from opalizer.api.tenants.models import Tenant
 from opalizer.api.tenants.schemas import TenantSchema
+from opalizer.auth.utils import ensure_tenant_header
 from opalizer.config import Env, settings
 
 if settings.environment == Env.tst:
@@ -51,20 +53,19 @@ async def with_async_db(tenant_schema_name: Union[str, None]) -> AsyncSession:
     finally:
         await session.close()
 
-async def get_tanant() -> TenantSchema:
+async def get_tanant(tenant_name:str=Depends(ensure_tenant_header)) -> TenantSchema:
     try:
-        # get this from the request payload or header
-        tenant_name = "gwc"
-
         if tenant_name is None:
             return None
-
         tenant_name = tenant_name.strip()
-
+        try:
+            tenant_id = uuid.UUID(tenant_name)
+            q = select(Tenant).filter(Tenant.id == tenant_id)
+        except ValueError as e:
+            q = select(Tenant).filter(func.lower(Tenant.name) == tenant_name.lower())
+        
         async with with_async_db(None) as db:
-            query = select(Tenant).where(Tenant.name == tenant_name)
-            result = await db.execute(query)
-
+            result = await db.execute(q)
             tenant = result.scalar_one_or_none()
 
         if tenant is None:

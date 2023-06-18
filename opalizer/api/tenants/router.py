@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi import status as HttpStatus
 from fastapi.responses import ORJSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import UUID4, parse_obj_as
 from opalizer.exceptions import TenantNameNotAvailableError, UpgradeAlembicHeadError
 from opalizer.api.tenants.utils import slugify, generate_api_key, generate_tenant_schema_name
@@ -14,11 +14,11 @@ from opalizer.api.tenants import service as ts
 from opalizer.database import get_public_async_db
 
 
-orgs_router = APIRouter(
+tenants_router = APIRouter(
     prefix="/v1/tenants"
 )
 
-# @orgs_router.get("/{id}", status_code=HttpStatus.HTTP_200_OK)
+# @tenants_router.get("/{id}", status_code=HttpStatus.HTTP_200_OK)
 # async def get_tenant(request:Request, response:Response,
 #                   id:UUID4,
 #                   db:Session=Depends(get_public_async_db)):
@@ -28,10 +28,10 @@ orgs_router = APIRouter(
 #     except Exception as e:
 #         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
 
-@orgs_router.get("/{name}", status_code=HttpStatus.HTTP_200_OK)
+@tenants_router.get("/{name}", status_code=HttpStatus.HTTP_200_OK)
 async def get_tenant(request:Request, response:Response,
                   name:str,
-                  db:Session=Depends(get_public_async_db)):
+                  db:AsyncSession=Depends(get_public_async_db)):
     try:
         tenant = await ts.get_by_name(session=db, tenant_name=name)
         return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(tenant))
@@ -39,20 +39,20 @@ async def get_tenant(request:Request, response:Response,
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
 
 
-@orgs_router.get("/", status_code=HttpStatus.HTTP_200_OK)
+@tenants_router.get("/", status_code=HttpStatus.HTTP_200_OK)
 async def get_all_tenants(request:Request, response:Response,
-                          db:Session=Depends(get_public_async_db)):
+                          db:AsyncSession=Depends(get_public_async_db)):
     try:
         tenants = await ts.get_all(db)
         return CollectionResponse(status=RequestStatus.success, value=parse_obj_as(List[TenantSchema], tenants))
     except Exception as e:
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
 
-@orgs_router.post("/", status_code=HttpStatus.HTTP_200_OK)
+@tenants_router.post("/", status_code=HttpStatus.HTTP_200_OK)
 @limiter.limit("10/second")
 async def create_tenant(request:Request, response:Response, 
                      payload: TenantSchema, 
-                     db:Session=Depends(get_public_async_db)) -> SingleResponse:
+                     db:AsyncSession=Depends(get_public_async_db)) -> SingleResponse:
     try:
         tenant = await ts.get_by_name(session=db, tenant_name=payload.name)
         if tenant:
