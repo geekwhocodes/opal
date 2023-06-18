@@ -1,5 +1,5 @@
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, Request, Response
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -23,6 +23,11 @@ app = create_app()
 app.include_router(router=tenants_router)
 app.include_router(stores_router)
 
+
+@app.get('/ip')
+@limiter.limit("10/second")
+def get_ip(request:Request,response:Response, x_forwarded_for: str = Header(None, alias='X-Forwarded-For')):
+    return {"ip": x_forwarded_for}
 
 
 
