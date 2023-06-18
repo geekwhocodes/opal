@@ -1,4 +1,6 @@
-from fastapi import Depends, HTTPException, Header, status, Security
+import base64
+import secrets
+from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import APIKeyHeader, APIKeyQuery
 
 api_key_query = APIKeyQuery(name="api-key", auto_error=False)
@@ -8,7 +10,7 @@ api_key_header = APIKeyHeader(name="api-key", auto_error=False)
 def ensure_api_key(
         api_key_query: str = Security(api_key_query),
         api_key_header: str = Security(api_key_header)
-    ):
+    ) -> str:
     """ Ensure's that api key is present in headers or query path """
     
     if api_key_header:
@@ -21,11 +23,23 @@ def ensure_api_key(
             detail="Invalid or missing API Key",
         )
 
-def ensure_tenant_header(tenant: str = Header(alias="tenant-id", example="{'tenant:'tenant name' or 'tenant-id':'tenant id'}")) -> str:
-    """ Ensure's that tenant name or id present in the headers """
-    if (tenant == None):
+
+def generate_api_key(tenant_id:str) -> str:
+    sec_bytes = f"{tenant_id}:{secrets.token_urlsafe(16).replace(':', '_')}".encode(encoding="utf-8")
+    return base64.b64encode(sec_bytes).decode(encoding="utf-8")
+
+def get_tenant_id_from_api_key(api_key:str=Depends(ensure_api_key)) -> str:
+    """ """
+    try:
+        result = base64.b64decode(api_key).decode(encoding="utf=8").split(":")
+        if not len(result) == 2:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing API Key",
+            )
+        return result[0]
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing Tenant in headers. Please pass tanant name or id in the headers.",
-        )
-    return tenant
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing API Key",
+            )

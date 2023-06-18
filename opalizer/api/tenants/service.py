@@ -13,7 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from opalizer.api.tenants.models import Tenant
 from opalizer.api.tenants.schemas import TenantSchema
-from opalizer.api.tenants.utils import generate_api_key, generate_tenant_schema_name, slugify
+from opalizer.api.tenants.utils import generate_tenant_schema_name, slugify
+from opalizer.auth.utils import generate_api_key
 from opalizer.database import with_async_db, async_engine
 from opalizer.config import get_settings
 from opalizer.exceptions import UpgradeAlembicHeadError, TenantNameNotAvailableError
@@ -93,16 +94,20 @@ async def delete_tenant(schema: str, cascade: bool=False) -> dict:
         logging.fatal(e)
         raise e
 
-async def create_tenant(payload: TenantSchema) -> Tenant:
-    async with with_async_db("public") as db:
+async def create_tenant(session:AsyncSession, payload: TenantSchema) -> Tenant:
         new_tenant = Tenant(**payload.dict())
         new_tenant.schema = generate_tenant_schema_name(payload.name)
         new_tenant.slug = slugify(payload.name)
-        new_tenant.api_key = generate_api_key(suffix=payload.name)
-        db.add(new_tenant)
+        #new_tenant.api_key = generate_api_key(suffix=payload.name)
+        session.add(new_tenant)
         await provision_tenant(schema=new_tenant.schema)
-        await db.commit()
-        await db.refresh(new_tenant)
+        await session.commit()
+        await session.refresh(new_tenant)
+        # create api key
+        new_tenant.api_key = generate_api_key(tenant_id=new_tenant.id)
+        await session.merge(new_tenant)
+        await session.commit()
+        await session.refresh(new_tenant)
         return new_tenant
 
 async def get_all(session:AsyncSession) -> Union[None, List[Tenant]]:

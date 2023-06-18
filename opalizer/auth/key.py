@@ -1,5 +1,4 @@
-from fastapi import Depends, HTTPException, Header, status, Security
-from fastapi.security import APIKeyHeader, APIKeyQuery
+from fastapi import Depends, HTTPException, status
 from opalizer.api.tenants.schemas import TenantSchema
 from opalizer.auth.utils import ensure_api_key
 

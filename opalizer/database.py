@@ -11,7 +11,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from opalizer.api.tenants.models import Tenant
 from opalizer.api.tenants.schemas import TenantSchema
-from opalizer.auth.utils import ensure_tenant_header
+from opalizer.auth.utils import get_tenant_id_from_api_key
 from opalizer.config import Env, settings
 
 if settings.environment == Env.tst:
@@ -53,7 +53,7 @@ async def with_async_db(tenant_schema_name: Union[str, None]) -> AsyncSession:
     finally:
         await session.close()
 
-async def get_tanant(tenant_name:str=Depends(ensure_tenant_header)) -> TenantSchema:
+async def get_tanant(tenant_name:str=Depends(get_tenant_id_from_api_key)) -> TenantSchema:
     try:
         if tenant_name is None:
             return None
