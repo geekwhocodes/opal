@@ -44,12 +44,13 @@ async def with_async_db(tenant_schema_name: Union[str, None]) -> AsyncSession:
     try:
         async with async_session(autocommit=False, autoflush=False, bind=schema_engine) as session:
             yield session
-    except ProgrammingError as e:
-        await session.rollback()
-        raise e
+    # except ProgrammingError as e:
+    #     await session.rollback()
+    #     raise e
     except Exception as e:
         logging.fatal(e, {"tenant": tenant_schema_name})
         await session.rollback()
+        raise # raise so that it can bubble up and can be handled by the caller!
     finally:
         await session.close()
 

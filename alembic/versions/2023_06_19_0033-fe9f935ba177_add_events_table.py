@@ -22,7 +22,7 @@ def upgrade() -> None:
     sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4(), nullable=False),
     sa.Column("latitude", sa.Float(), nullable=False),
     sa.Column("longitude", sa.Float(), nullable=False),
-    sa.Column("radius", sa.Float(), nullable=True),
+    sa.Column("accuracy", sa.Float(), nullable=True),
     sa.Column("ip_addr", sa.String(length=64), nullable=True),
     sa.Column("ga_user_id", sa.String(length=256), nullable=True),
     sa.Column("utm_medium", sa.String(length=512), nullable=True),

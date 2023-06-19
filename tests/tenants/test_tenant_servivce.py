@@ -1,6 +1,9 @@
 import asyncio
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.exc import DBAPIError
+from asyncpg.exceptions import DependentObjectsStillExistError
+
 from opalizer.exceptions import TenantNameNotAvailableError
 from opalizer.api.tenants.service import provision_tenant, delete_tenant
 
@@ -27,3 +30,19 @@ async def test_create_tenant(client: AsyncClient, schema):
     await cleanup_create_tenant(client, schema)
 
 
+@pytest.mark.asyncio
+async def test_delete_tenant_cascade_true(client: AsyncClient):
+    schema = "test__01"
+    result = await delete_tenant(schema=schema, cascade=True)
+    assert result == {"schema": schema}
+
+@pytest.mark.asyncio
+async def test_delete_tenant_cascade_false(client: AsyncClient):
+    try:
+        schema = "test__01"
+        result = await delete_tenant(schema=schema, cascade=False)
+        assert result == {"schema": schema}
+    except DBAPIError as e:
+        if e.orig:
+            assert e.orig.sqlstate == DependentObjectsStillExistError.sqlstate
+        
