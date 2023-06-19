@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "typescript",
+			"tsconfig": "opalazer-client-sdk/tsconfig.json",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build",
+			"label": "tsc: build - opalazer-client-sdk/tsconfig.json"
+		},
+		{
+			"type": "npm",
+			"script": "start",
+		}
+	]
+}

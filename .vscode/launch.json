@@ -5,13 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Program",
+            "program": "${workspaceFolder}/opalazer-client-sdk/src/app.ts",
+            "request": "launch",
+            "preLaunchTask": "tsc: build - opalazer-client-sdk/tsconfig.json",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node",
+            "sourceMaps": true
+        },
+        
+        
+
+        {
             "name": "Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "env": { "PYTHONPATH": "${workspaceRoot}"}
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}"
+            }
         },
         {
             "name": "Python: FastAPI",

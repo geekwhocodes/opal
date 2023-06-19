@@ -33,6 +33,7 @@ pytest-asyncio = "^0.21.0"
 async-asgi-testclient = "^1.4.11"
 nest-asyncio = "^1.5.6"
 pytest-dependency = "^0.5.1"
+pydantic-to-typescript = "^1.0.10"
 
 [build-system]
 requires = ["poetry-core"]
