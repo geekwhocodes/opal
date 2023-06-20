@@ -22,6 +22,7 @@ def parse_utm_values(q:str) -> Dict[str, str]:
         else:
             result[utm_key] = None
     return result
+
 def event_in_perimeter(stores:List[Store], e:EventSchemaIn) -> bool:
     if len(stores) <= 0:
         return False

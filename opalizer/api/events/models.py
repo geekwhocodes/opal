@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship
 from uuid import uuid4
+from opalizer.api.geomap.models import GeoMap
 from opalizer.api.store.models import Store
 from opalizer.api.tenants.models import Tenant
 from opalizer.database import Base
@@ -40,3 +41,17 @@ class Event(Base):
     # __table_args__ = {
     #     'postgresql_partition_by': 'RANGE(created_date)',
     # }
+
+class Address(Base):
+    __tablename__ = "addresses"
+
+    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
+    geohash = sa.Column("geohash", sa.String(16), nullable=False, index=True, unique=True)
+    geomap_id = sa.Column("geomap_id", sa.UUID(), sa.ForeignKey(GeoMap.id), nullable=False)
+
+    geomap = relationship(GeoMap)
+
+    created_at = sa.Column(
+        sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
+    )
+    updated_at = sa.Column(sa.TIMESTAMP(timezone=True), default=None, onupdate=sa.func.now())

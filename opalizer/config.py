@@ -22,6 +22,7 @@ class Env(Enum):
 
 class Settings(BaseSettings):
     app_name:str = "Opalizer"
+    version:str = "0.0.2"
     environment:Env = os.environ.get("environment")
     log_file:str = "log.log"
     root_dir = get_root_dir()
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
     )
     sql_echo:str = False
     items_per_page = 10
-
+    gmaps_key:str = os.environ.get("GMAPS_KEY")
     class Config:
         env_file = '/home/lowkey/opalizer/.env'
         env_file_encoding = 'utf-8'

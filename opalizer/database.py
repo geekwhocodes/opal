@@ -75,13 +75,13 @@ async def get_tanant(tenant_name:str=Depends(get_tenant_id_from_api_key)) -> Ten
         logging.fatal(e, tenant=tenant_name)
     return tenant
 
-async def get_async_db(tenant:Tenant=Depends(get_tanant)):
+async def get_async_db(tenant:Tenant=Depends(get_tanant)) -> AsyncSession:
     if not tenant:
         yield None
     
     async with with_async_db(tenant.schema) as db:
         yield db
 
-async def get_public_async_db() -> Session:
+async def get_public_async_db() -> AsyncSession:
     async with with_async_db("public") as db:
         yield db
