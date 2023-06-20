@@ -69,4 +69,15 @@ async def create_store(request:Request, response:Response,
                                   error=f"Unique field values are required.")
     except Exception as e:
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
-    
+
+@stores_router.get("/{id}", status_code=HttpStatus.HTTP_200_OK)
+@limiter.limit("10/second")
+async def delete_store(request:Request, response:Response, 
+                    id:uuid.UUID,
+                    db:Session=Depends(get_async_db)):
+    try:
+        await ss.delete_store(session=db, id=id)
+        return SingleResponse(status=RequestStatus.success, value=None)
+    except Exception as e:
+        return SingleResponse(status=RequestStatus.error, value=None, error="Internal error, pleaase try again.")
+

@@ -59,6 +59,10 @@ async def provision_tenant(schema: str) -> dict:
         :param schema: schema name 
     """
     try:
+
+        if schema == "public":
+            raise TenantNameNotAvailableError(schema=schema)
+        
         async with with_async_db("public") as session:
             await session.execute(sa.schema.CreateSchema(schema))
             await session.commit()
@@ -79,8 +83,9 @@ async def provision_tenant(schema: str) -> dict:
         raise
 
 async def delete_tenant(schema: str, cascade: bool=False) -> dict:
-    """ Creates a new schema and upgrade to current head
-        :param schema: schema name 
+    """ Delete's schema depending on the provided cascade flag.
+        :param schema: schema name
+        :param cascade: cascade delete
     """
     try:
         async with with_async_db("public") as session:
@@ -95,6 +100,8 @@ async def delete_tenant(schema: str, cascade: bool=False) -> dict:
         raise e
 
 async def create_tenant(session:AsyncSession, payload: TenantSchema) -> Tenant:
+        if payload.name == "public":
+            raise TenantNameNotAvailableError(schema=payload.name)
         new_tenant = Tenant(**payload.dict())
         new_tenant.schema = generate_tenant_schema_name(payload.name)
         new_tenant.slug = slugify(payload.name)

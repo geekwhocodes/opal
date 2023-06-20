@@ -10,3 +10,5 @@ async def test_get_store_by_id(client: TestClient):
     assert resp.get("status") == "success"
     assert isinstance(resp.get("value"), list)
 
+async def test_create_store(client: TestClient):
+    pass

@@ -15,27 +15,17 @@ tenants_router = APIRouter(
     prefix="/v1/tenants"
 )
 
-
-# @tenants_router.get("/{id}", status_code=HttpStatus.HTTP_200_OK)
-# async def get_tenant(request:Request, response:Response,
-#                   id:UUID4,
-#                   db:Session=Depends(get_public_async_db)):
-#     try:
-#         tenant = await ts.get_by_id(session=db, id=id)
-#         return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(tenant))
-#     except Exception as e:
-#         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
-
 @tenants_router.get("/{name}", status_code=HttpStatus.HTTP_200_OK)
 async def get_tenant(request:Request, response:Response,
                   name:str,
                   db:AsyncSession=Depends(get_public_async_db)):
     try:
         tenant = await ts.get_by_name(session=db, tenant_name=name)
-        return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(tenant))
+        if tenant:
+            return SingleResponse(status=RequestStatus.success, value=TenantSchema.from_orm(tenant))
+        return SingleResponse(status=RequestStatus.success, value=None)
     except Exception as e:
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
-
 
 @tenants_router.get("/", status_code=HttpStatus.HTTP_200_OK)
 async def get_all_tenants(request:Request, response:Response,
@@ -70,3 +60,12 @@ async def create_tenant(request:Request, response:Response,
     except Exception as e:
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
     
+@tenants_router.delete("/{name}", status_code=HttpStatus.HTTP_200_OK)
+async def delete_tenant(request:Request, response:Response,
+                  name:str,
+                  db:AsyncSession=Depends(get_public_async_db)):
+    try:
+        await ts.delete_tenant(schema=name, cascade=True)
+        return SingleResponse(status=RequestStatus.success, value=None)
+    except Exception as e:
+        return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")

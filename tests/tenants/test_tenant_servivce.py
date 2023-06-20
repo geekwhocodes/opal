@@ -16,19 +16,19 @@ async def cleanup_create_tenant(client: AsyncClient, schema):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "schema",
-    (
-        (
-            "test__01"
-        )
-    ),
-)
-async def test_create_tenant(client: AsyncClient, schema):
+async def test_create_tenant(client: AsyncClient):
+    schema = "test__01"
     result = await provision_tenant(schema=schema)
     assert result == {"schema": schema}
     await cleanup_create_tenant(client, schema)
 
+@pytest.mark.asyncio
+async def test_create_tenant_name_not_available(client: AsyncClient):
+    try:
+        schema = "public"
+        result = await provision_tenant(schema=schema)
+    except Exception as e:
+        assert type(e) == TenantNameNotAvailableError
 
 @pytest.mark.asyncio
 async def test_delete_tenant_cascade_true(client: AsyncClient):

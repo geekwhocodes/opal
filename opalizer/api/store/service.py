@@ -28,9 +28,17 @@ async def get_by_name(session:AsyncSession, name:str) -> Union[None, Store]:
         raise
 
 async def create_store(session:AsyncSession, payload: StoreSchema, tenant: Tenant) -> Store:
-        new_store = Store(**payload.dict())
-        new_store.tenant_id = tenant.id
-        session.add(new_store)
-        await session.commit()
-        await session.refresh(new_store)
-        return new_store
+    new_store = Store(**payload.dict())
+    new_store.tenant_id = tenant.id
+    session.add(new_store)
+    await session.commit()
+    await session.refresh(new_store)
+    return new_store
+
+async def delete_store(session:AsyncSession, id:UUID) -> None:
+    try:
+        store = await get_by_id(session, id)
+        if store:
+            await session.delete(store)
+    except Exception as e:
+        raise    
