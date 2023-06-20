@@ -1,10 +1,12 @@
 
 from typing import List
+import uuid
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from asyncpg.exceptions import UniqueViolationError
 
-from opalizer.api.events.models import Address, Event
+from opalizer.api.events.models import Address, Event, Impression
 from opalizer.api.events.schemas import EventSchemaIn
 from opalizer.api.events.utils import event_in_perimeter, parse_utm_values
 from opalizer.database import with_async_db
@@ -38,7 +40,6 @@ async def add_or_update_address(tenant:Tenant, geomap:GeoMap):
             new_address = Address()
             new_address.geohash = geomap.geohash
             new_address.geomap_id = geomap.id
-            new_address.updated_at = None
             session.add(new_address)
             await session.commit()
     except IntegrityError as e:
@@ -48,5 +49,25 @@ async def add_or_update_address(tenant:Tenant, geomap:GeoMap):
     except Exception as e:
         raise
                 
+async def process_impression(e:EventSchemaIn, tenant:Tenant):
+    if not e.ga_user_id:
+        return
+    try:
+        async with with_async_db(tenant_schema_name=tenant.schema) as session:
+            update_query = f"""
+                INSERT INTO {tenant.schema}.impressions(id, user_id, count) 
+                VALUES ('{uuid.uuid4()}', '{e.ga_user_id}', 1)
+                ON CONFLICT (user_id)
+                DO UPDATE SET count = {tenant.schema}.impressions.count + 1
+            """
+            await session.execute(text(update_query))
+            await session.commit()
+    except IntegrityError as e:
+        if e.orig:
+            if e.orig.sqlstate == UniqueViolationError.sqlstate:
+                pass
+    except Exception as e:
+        raise
                 
+              
 

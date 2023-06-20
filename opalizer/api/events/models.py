@@ -55,3 +55,16 @@ class Address(Base):
         sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
     )
     updated_at = sa.Column(sa.TIMESTAMP(timezone=True), default=None, onupdate=sa.func.now())
+
+
+class Impression(Base):
+    __tablename__ = "impressions"
+
+    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
+    user_id = sa.Column("user_id", sa.String(256), nullable=False, index=True, unique=True)
+    count = sa.Column("count", sa.Integer(), nullable=True, default=1)
+
+    created_at = sa.Column(
+        sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.func.now()
+    )
+    updated_at = sa.Column(sa.TIMESTAMP(timezone=True), default=None, onupdate=sa.func.now())

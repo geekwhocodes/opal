@@ -34,7 +34,7 @@ async def create_event(request:Request, response:Response,
                      private_session=Depends(get_async_db)) -> SingleResponse:
     try:
         background_tasks.add_task(es.process_event, payload, tenant, public_session, private_session)
-        #await es.create_event(private_session, payload, tenant)
+        background_tasks.add_task(es.process_impression, payload, tenant)
         return SingleResponse(status=RequestStatus.success, value=None)
     except Exception as e:
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
