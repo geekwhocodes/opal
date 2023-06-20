@@ -42,7 +42,7 @@ class Settings(BaseSettings):
         port="5432",
         path=f"/{os.environ.get('SQL_TEST_DB') or ''}",
     )
-    sql_echo:str = os.environ.get('SQL_ECHO')
+    sql_echo:str = False
     items_per_page = 10
 
     class Config:

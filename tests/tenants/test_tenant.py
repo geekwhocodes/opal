@@ -2,7 +2,7 @@ import pytest
 from async_asgi_testclient import TestClient
 from httpx import Response, _status_codes
 
-from opalizer.api.tenants.schemas import TenantSchema
+from opalizer.api.tenants.schemas import TenantSchema, TenantSchemaIn
 
 @pytest.mark.asyncio
 async def test_get_all_tenants(client: TestClient):
@@ -15,8 +15,8 @@ async def test_get_all_tenants(client: TestClient):
 
 @pytest.mark.asyncio
 async def test_create_tenant(client: TestClient):
-    org_name ="Geekwhocodes"
-    payload = TenantSchema(name=org_name)
+    org_name ="kabo"
+    payload = TenantSchemaIn(name=org_name)
     response:Response = await client.post("/v1/tenants/", data=payload.json())
     assert response.status_code == _status_codes.code.OK
     resp = response.json()

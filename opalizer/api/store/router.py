@@ -4,9 +4,11 @@ from fastapi import APIRouter, Depends, Request, Response, Security
 from fastapi import status as HttpStatus
 from fastapi.responses import ORJSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from asyncpg.exceptions import UniqueViolationError
 from pydantic import parse_obj_as
-from opalizer.api.tenants.models import Tenant
 
+from opalizer.api.tenants.models import Tenant
 from opalizer.auth.key import validate_api_key
 from opalizer.core.rate_limiter import limiter
 from opalizer.schemas import SingleResponse, CollectionResponse, RequestStatus
@@ -59,6 +61,12 @@ async def create_store(request:Request, response:Response,
                                   error=f"Store name '{payload.name}' is not available. Please use different store name.")
         new_store = await ss.create_store(db,payload, tenant)
         return SingleResponse(status=RequestStatus.success, value=StoreSchema.from_orm(new_store))
+    except IntegrityError as e:
+        if e.orig:
+            if e.orig.sqlstate == UniqueViolationError.sqlstate:
+                return SingleResponse(status=RequestStatus.error, 
+                                  value=None,
+                                  error=f"Unique field values are required.")
     except Exception as e:
         return SingleResponse(status=RequestStatus.error, value=None, error="Internal error")
     

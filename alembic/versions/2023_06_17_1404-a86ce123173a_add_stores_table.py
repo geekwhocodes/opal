@@ -20,7 +20,7 @@ depends_on = None
 def upgrade():
     op.create_table(
         'stores',
-        sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4(), nullable=False),
+        sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False),
         sa.Column("name", sa.String(256), nullable=False, index=True, unique=True),
         sa.Column("owner", sa.String(64), nullable=False),
         sa.Column("latitude", sa.Float(), nullable=False),

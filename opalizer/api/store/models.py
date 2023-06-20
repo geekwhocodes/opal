@@ -8,7 +8,7 @@ from opalizer.database import Base
 class Store(Base):
     __tablename__ = "stores"
 
-    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4(), nullable=False)
+    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
     name = sa.Column("name", sa.String(256), nullable=False, index=True, unique=True)
     owner = sa.Column("owner", sa.String(64), nullable=False, unique=True)
     latitude = sa.Column("latitude", sa.Float(), nullable=False)

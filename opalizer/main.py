@@ -8,6 +8,7 @@ from opalizer.core.rate_limiter import limiter
 from opalizer.api.tenants.service import upgrade_head
 from opalizer.api.tenants.router import tenants_router
 from opalizer.api.store.router import stores_router
+from opalizer.api.events.router import events_router
 
 log = logging.getLogger(__name__)
 setup_logging()
@@ -22,6 +23,7 @@ def create_app() -> FastAPI:
 app = create_app()
 app.include_router(router=tenants_router)
 app.include_router(stores_router)
+app.include_router(events_router)
 
 
 @app.get('/ip')

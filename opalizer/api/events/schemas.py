@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 from pydantic import UUID4, Extra, Field
 from opalizer.schemas import ORJSONModel
@@ -15,13 +15,17 @@ class WindowLocation(ORJSONModel):
     search: Optional[str] = None
     hash: Optional[str] = None
 
+class Browser(ORJSONModel):
+    app_code_name: str
+    user_agent: str
+
 class EventSchemaIn(ORJSONModel):
     latitude:   float
     longitude:  float
     accuracy:   Union[float, None] = None
     ga_user_id: Union[str, None] = None
     window_location_json:   WindowLocation
-    browser_json: object
-    
+    browser_json: Browser
+    extra_json: Union[Dict, None]
     class Config:
         extra = Extra.forbid

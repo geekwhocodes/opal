@@ -15,9 +15,9 @@ from opalizer.auth.utils import get_tenant_id_from_api_key
 from opalizer.config import Env, settings
 
 if settings.environment == Env.tst:
-    async_engine = create_async_engine(settings.test_db_url, echo=bool(settings.sql_echo), pool_pre_ping=True, pool_recycle=240)
+    async_engine = create_async_engine(settings.test_db_url, echo=bool(settings.sql_echo), pool_size=100, pool_pre_ping=True, pool_recycle=240)
 else:
-    async_engine = create_async_engine(settings.db_url, echo=bool(settings.sql_echo), pool_pre_ping=True, pool_recycle=240)
+    async_engine = create_async_engine(settings.db_url, echo=bool(settings.sql_echo), pool_size=100, pool_pre_ping=True, pool_recycle=240)
 
 async_session = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 

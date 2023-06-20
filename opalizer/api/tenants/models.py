@@ -9,7 +9,7 @@ from opalizer.shared_models import Base
 class Tenant(Base):
     __tablename__ = "tenants"
 
-    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4(), nullable=False)
+    id = sa.Column("id", sa.UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
     name = sa.Column("name", sa.String(256), nullable=False, index=True, unique=True)
     schema = sa.Column("schema", sa.String(64), nullable=False, unique=True)
     slug = sa.Column("slug", sa.String(32), nullable=False, unique=True)
